@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EVSmart | Charging Intelligence</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+<div class="app-shell">
+<aside class="sidebar">
+  <div class="brand"><div class="brand-mark">E</div><div><b>EVSMART</b><small>CHARGING INTELLIGENCE</small></div></div>
+  <div class="workspace"><span class="live-dot"></span> DEMO ENVIRONMENT <span class="pill">LOCAL</span></div>
+  <nav>
+    <button class="nav-item active" data-view="overview"><span>▦</span> Overview</button>
+    <button class="nav-item" data-view="stations"><span>⌖</span> Stations & Chargers</button>
+    <button class="nav-item" data-view="scheduler"><span>↗</span> AI Scheduler</button>
+    <button class="nav-item" data-view="vehicles"><span>▰</span> Vehicle Fleet</button>
+    <button class="nav-item" data-view="bookings"><span>◷</span> Booking Operations</button>
+    <button class="nav-item" data-view="analytics"><span>⌁</span> Energy Analytics</button>
+  </nav>
+  <div class="sidebar-bottom"><div class="profile-avatar">PB</div><div class="profile-info"><b>Demo Operator</b><small>System Administrator</small></div><span class="status-mini">●</span></div>
+</aside>
+<main class="main">
+  <header class="topbar"><div><div class="eyebrow">OPERATIONS CENTER / PUNE</div><h1 id="page-title">Charging overview</h1></div><div class="top-actions"><div class="system-status"><span class="live-dot"></span><span>System operational</span></div><button class="icon-button" id="refreshBtn" title="Refresh dashboard">↻</button><button class="primary-btn" id="simulateBtn">▷ Run simulation tick</button></div></header>
+  <section class="view active" id="view-overview">
+    <div class="welcome-row"><div><h2>Good evening, Operator <span>✦</span></h2><p>Here’s what’s happening across your charging network.</p></div><div class="timestamp" id="last-updated">Updating…</div></div>
+    <div class="kpi-grid">
+      <article class="kpi"><div class="kpi-top"><span>Network stations</span><span class="kpi-icon purple">⌖</span></div><div class="kpi-value" id="k-stations">—</div><div class="kpi-foot">Across Pune demo network</div></article>
+      <article class="kpi"><div class="kpi-top"><span>Available chargers</span><span class="kpi-icon green">ϟ</span></div><div class="kpi-value" id="k-available">—<small id="k-total"></small></div><div class="kpi-foot"><span class="green-text" id="availability-rate">—</span> network availability</div></article>
+      <article class="kpi"><div class="kpi-top"><span>Active sessions</span><span class="kpi-icon blue">◷</span></div><div class="kpi-value" id="k-active">—</div><div class="kpi-foot">Reserved and charging</div></article>
+      <article class="kpi"><div class="kpi-top"><span>Energy delivered</span><span class="kpi-icon orange">ϟ</span></div><div class="kpi-value"><span id="k-energy">—</span><small>kWh</small></div><div class="kpi-foot">Completed demo sessions</div></article>
+    </div>
+    <div class="content-grid">
+      <article class="panel network-panel"><div class="panel-heading"><div><h3>Station network</h3><p>Charger status by location</p></div><button class="text-btn" data-goto="stations">View stations ↗</button></div><div id="station-list" class="station-list"></div></article>
+      <article class="panel chart-panel"><div class="panel-heading"><div><h3>Demand forecast</h3><p>Illustrative energy demand by time</p></div><span class="tag">BASELINE MODEL</span></div><div class="chart-wrap"><canvas id="demandChart"></canvas></div><div class="forecast-note" id="forecast-note">Loading forecast…</div></article>
+    </div>
+    <div class="content-grid lower-grid">
+      <article class="panel"><div class="panel-heading"><div><h3>Recent booking activity</h3><p>Latest transactions in this demo</p></div><button class="text-btn" data-goto="bookings">All bookings ↗</button></div><div class="table-wrap"><table><thead><tr><th>BOOKING</th><th>VEHICLE</th><th>CHARGER</th><th>STATUS</th></tr></thead><tbody id="recent-bookings"></tbody></table></div></article>
+      <article class="panel"><div class="panel-heading"><div><h3>Operations feed</h3><p>System and simulated telemetry events</p></div><span class="live-dot"></span></div><div id="event-list" class="event-list"></div></article>
+    </div>
+  </section>
+
+  <section class="view" id="view-stations">
+    <div class="section-intro"><div><h2>Stations & chargers</h2><p>Inspect inventory and manage simulated charger availability.</p></div><span class="tag">SIMULATED TELEMETRY</span></div>
+    <div id="station-cards" class="station-cards"></div>
+    <article class="panel"><div class="panel-heading"><div><h3>Charger inventory</h3><p>Mark idle chargers available or offline for fault-handling demonstrations.</p></div></div><div class="table-wrap"><table><thead><tr><th>CHARGER ID</th><th>STATION</th><th>CONNECTOR</th><th>POWER</th><th>STATUS</th><th>ACTION</th></tr></thead><tbody id="charger-table"></tbody></table></div></article>
+  </section>
+
+  <section class="view" id="view-scheduler">
+    <div class="section-intro"><div><h2>Intelligent charging scheduler</h2><p>Compare a weighted recommendation against a first-available baseline.</p></div><span class="tag">DECISION ENGINE</span></div>
+    <div class="scheduler-grid">
+      <article class="panel form-panel"><div class="panel-heading"><div><h3>Charging request</h3><p>Set vehicle and target charge level.</p></div></div>
+        <form id="recommend-form">
+          <label>Vehicle <select id="vehicle-select" required></select></label>
+          <div class="form-two"><label>Target state of charge (%)<input id="target-soc" type="number" min="1" max="100" value="80" required></label><label>Priority<select id="priority"><option value="normal">Normal</option><option value="urgent">Urgent</option><option value="flexible">Flexible</option></select></label></div>
+          <label>Scheduling strategy<select id="method"><option value="smart">Smart weighted scoring</option><option value="fcfs">FCFS baseline</option></select></label>
+          <div class="hint-box">The engine checks connector compatibility, estimates energy/time/cost, then ranks available chargers. “Smart” is a transparent heuristic—not a trained AI model.</div>
+          <button class="primary-btn full-btn" type="submit">Calculate recommendation ↗</button>
+        </form>
+      </article>
+      <article class="panel result-panel" id="recommend-result"><div class="empty-state"><div class="empty-icon">↗</div><h3>Ready to optimize</h3><p>Submit a charging request to see a recommendation, estimated costs and alternative chargers.</p></div></article>
+    </div>
+  </section>
+
+  <section class="view" id="view-vehicles">
+    <div class="section-intro"><div><h2>Vehicle fleet</h2><p>Register EVs and use their connector, battery capacity and current SOC in scheduling.</p></div><button class="primary-btn" id="show-vehicle-form">+ Register vehicle</button></div>
+    <article class="panel form-panel hidden" id="vehicle-form-panel"><div class="panel-heading"><div><h3>Register vehicle</h3><p>Vehicle data is stored in the local SQLite database.</p></div></div>
+      <form id="vehicle-form"><div class="form-two"><label>Owner name<input name="owner" required placeholder="e.g. Demo User"></label><label>Vehicle model<input name="model" required placeholder="e.g. Tata Nexon EV"></label></div><div class="form-three"><label>Connector<select name="connector"><option>CCS2</option><option>Type2</option><option>CHAdeMO</option></select></label><label>Battery (kWh)<input name="battery_kwh" type="number" min="1" value="40" required></label><label>Current SOC (%)<input name="soc" type="number" min="0" max="100" value="25" required></label></div><button class="primary-btn" type="submit">Save vehicle</button><button type="button" class="secondary-btn" id="cancel-vehicle">Cancel</button></form>
+    </article>
+    <div id="vehicle-cards" class="vehicle-grid"></div>
+  </section>
+
+  <section class="view" id="view-bookings">
+    <div class="section-intro"><div><h2>Booking operations</h2><p>Run the booking lifecycle: reserve → start charging → complete or cancel.</p></div><button class="secondary-btn" id="reset-demo">Reset demo transactions</button></div>
+    <article class="panel"><div class="panel-heading"><div><h3>All bookings</h3><p>Changes persist locally in SQLite across app restarts.</p></div><button class="icon-button" id="refreshBookings">↻</button></div><div class="table-wrap"><table><thead><tr><th>BOOKING ID</th><th>VEHICLE</th><th>STATION / CHARGER</th><th>ENERGY</th><th>EST. COST</th><th>STATUS</th><th>ACTIONS</th></tr></thead><tbody id="booking-table"></tbody></table></div></article>
+  </section>
+
+  <section class="view" id="view-analytics">
+    <div class="section-intro"><div><h2>Energy analytics</h2><p>Operational metrics calculated from completed sessions in the local database.</p></div><span class="tag">LIVE FROM SQLITE</span></div>
+    <div class="kpi-grid analytics-kpis"><article class="kpi"><div class="kpi-top"><span>Completed sessions</span><span class="kpi-icon purple">✓</span></div><div class="kpi-value" id="a-sessions">—</div><div class="kpi-foot">Completed bookings</div></article><article class="kpi"><div class="kpi-top"><span>Energy delivered</span><span class="kpi-icon green">ϟ</span></div><div class="kpi-value"><span id="a-energy">—</span><small>kWh</small></div><div class="kpi-foot">Completed sessions only</div></article><article class="kpi"><div class="kpi-top"><span>Estimated revenue</span><span class="kpi-icon orange">₹</span></div><div class="kpi-value" id="a-revenue">—</div><div class="kpi-foot">Based on configured demo tariffs</div></article><article class="kpi"><div class="kpi-top"><span>Charger availability</span><span class="kpi-icon blue">ϟ</span></div><div class="kpi-value" id="a-availability">—</div><div class="kpi-foot">Current inventory snapshot</div></article></div>
+    <div class="content-grid"><article class="panel"><div class="panel-heading"><div><h3>Energy by station</h3><p>Completed session energy</p></div></div><div class="chart-wrap"><canvas id="stationChart"></canvas></div></article><article class="panel"><div class="panel-heading"><div><h3>Charger status mix</h3><p>Current inventory snapshot</p></div></div><div class="chart-wrap"><canvas id="statusChart"></canvas></div></article></div>
+    <article class="panel"><div class="panel-heading"><div><h3>Forecast method & limitations</h3><p>Be transparent about what the demo actually implements.</p></div></div><div id="forecast-details" class="forecast-details"></div></article>
+  </section>
+  <footer><span>EVSmart Enterprise Demo · Local simulation</span><span>Not connected to real charging hardware or live utility data</span></footer>
+</main>
+</div>
+<div id="toast-region" class="toast-region"></div>
+<script src="{{ url_for('static', filename='app.js') }}"></script>
+</body></html>

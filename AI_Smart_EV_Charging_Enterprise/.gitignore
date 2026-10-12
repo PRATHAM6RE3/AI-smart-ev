@@ -1,0 +1,7 @@
+__pycache__/
+.venv/
+venv/
+*.py[cod]
+evsmart.db
+.env
+.DS_Store
